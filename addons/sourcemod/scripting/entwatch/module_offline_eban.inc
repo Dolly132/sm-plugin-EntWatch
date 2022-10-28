@@ -2,11 +2,9 @@
 
 #if defined EW_MODULE_EBAN
 
-ConVar g_hCvar_OfflineClearRecords, g_hCvar_OfflineLongEban;
+ConVar g_hCvar_OfflineClearRecords;
 
 int g_iOfflineTimeClear = 30;
-
-ArrayList g_OfflineArray;
 
 class_Offline_Eban g_aMenuBuffer[MAXPLAYERS+1];
 
