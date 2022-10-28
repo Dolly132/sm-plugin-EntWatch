@@ -7,6 +7,7 @@
 //-------------------------------------------------------
 ConVar	g_hCvar_Default_BanTime,
 		g_hCvar_Default_BanReason,
+		g_hCvar_Default_UnBanReason,
 		g_hCvar_Keep_Expired_Bans,
 		g_hCvar_Use_Reason_Menu,
 		g_hCvar_MaxBanTime;
@@ -24,6 +25,7 @@ stock void EWM_Eban_OnPluginStart()
 {
 	g_hCvar_Default_BanTime		= CreateConVar("entwatch_bantime", "0", "Default ban time (0-518400)", _, true, 0.0, true, 518400.0);
 	g_hCvar_Default_BanReason	= CreateConVar("entwatch_banreason", "Item misuse", "Default ban reason.", _);
+	g_hCvar_Default_UnBanReason	= CreateConVar("entwatch_unbanreason", "Giving another chance", "Default Unban reason.", _);
 	g_hCvar_Keep_Expired_Bans	= CreateConVar("entwatch_keep_expired_ban", "1", "Enable/Disable keep expired bans.", _, true, 0.0, true, 1.0);
 	g_hCvar_Use_Reason_Menu		= CreateConVar("entwatch_use_reason_menu", "0", "Enable/Disable menu if the admin has not indicated a reason", _, true, 0.0, true, 1.0);
 	g_hCvar_MaxBanTime			= CreateConVar("entwatch_max_bantime", "518400", "Maximum ban time allowed via console command (0-518400)", _, true, 0.0, true, 518400.0);
@@ -203,7 +205,7 @@ public void EWM_Eban_BanClient(int iClient, int iAdmin, int iDuration, const cha
 			g_EbanClients[iClient].TimeStamp_Issued = GetTime();
 			FormatEx(g_EbanClients[iClient].Reason, 64, "%s", sReason);
 			LogAction(iAdmin, iClient, "\"%L\" restricted \"%L\" temporary. Reason: %s", iAdmin, iClient, sReason);
-			CPrintToChatAll("%s%t %s%s %s%t %s%N% %s%t. %s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Disabled, "Restricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Enabled, "Temporary", g_SchemeConfig.Color_Warning, "Reason", sReason);
+			CPrintToChatAll("%s%t %s%s %s%t %s%N %s%t. \n%s%t %s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Disabled, "Restricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Disabled, "Temporary", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Reason", sReason);
 		}else if(iBanDuration == 0)
 		{
 			//Wesker EDIT -- Restrict perma bans with command override
@@ -238,7 +240,7 @@ public void EWM_Eban_BanClient(int iClient, int iAdmin, int iDuration, const cha
 				SQL_TQuery(g_hEbanDB, EWM_Eban_SQLTCallBackBan, sTQuery,0);
 			}
 			LogAction(iAdmin, iClient, "\"%L\" restricted \"%L\" permanently. Reason: %s", iAdmin, iClient, sReason);
-			CPrintToChatAll("%s%t %s%s %s%t %s%N %s%t. %s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Disabled, "Restricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Disabled, "Permanently", g_SchemeConfig.Color_Warning, "Reason", sReason);
+			CPrintToChatAll("%s%t %s%s %s%t %s%N %s%t. \n%s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Disabled, "Restricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Disabled, "Permanently", g_SchemeConfig.Color_Warning, "Reason", sReason);
 		}else
 		{
 			//Wesker EDIT -- Restrict longer bans with command override
@@ -281,7 +283,7 @@ public void EWM_Eban_BanClient(int iClient, int iAdmin, int iDuration, const cha
 			}
 			
 			LogAction(iAdmin, iClient, "\"%L\" restricted \"%L\" for %d minutes. Reason: %s", iAdmin, iClient, iBanDuration, sReason);
-			CPrintToChatAll("%s%t %s%s %s%t %s%N %s%t. %s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Disabled, "Restricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Enabled, "For Minutes", iBanDuration, g_SchemeConfig.Color_Warning, "Reason", sReason);
+			CPrintToChatAll("%s%t %s%s %s%t %s%N %s%t. \n%s%t %s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Disabled, "Restricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Enabled, "For Minutes", iBanDuration, g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Reason", sReason);
 		}
 		
 		#if defined EW_MODULE_FORWARDS
@@ -383,7 +385,8 @@ public void EWM_Eban_UnBanClient(int iClient, int iAdmin, const char[] sReason)
 	EWM_Eban_Update_Client(iClient);
 	
 	LogAction(iAdmin, iClient, "\"%L\" unrestricted \"%L\". Reason: %s", iAdmin, iClient, sReason);
-	CPrintToChatAll("%s%t %s%s %s%t %s%N%. %s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Enabled, "Unrestricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Warning, "Reason", sReason);
+	CPrintToChatAll("%s%t %s%s %s%t %s%N%. \n%s%t %s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Enabled, "Unrestricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Reason", sReason);
+	//CPrintToChatAll("%s%t %s%s %s%t %s%N%. %s%t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Enabled, "Unrestricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Warning, "Reason", sReason);
 }
 
 void EWM_Eban_SQLUnBan_Success(Database hDatabase, any Data, int iNumQueries, Handle[] hResults, any[] QueryData)
@@ -592,58 +595,122 @@ public Action EWM_Eban_Command_Restrict(int iClient, int iArgs)
 {
 	if((IsClientConnected(iClient) && IsClientInGame(iClient)))
 	{
-		if (GetCmdArgs() < 1)
+		if (iArgs < 1)
 		{
 			CReplyToCommand(iClient, "%s%t %s%t: sm_eban <target> [<duration>] [<reason>]", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Usage");
 			return Plugin_Handled;
 		}
-		char sTarget_argument[64];
+		char sTarget_argument[64], sDuration_argument[32], sReason_argument[64];
 		GetCmdArg(1, sTarget_argument, sizeof(sTarget_argument));
 
 		int iTarget = -1;
-		if((iTarget = FindTarget(iClient, sTarget_argument, true)) == -1) return Plugin_Handled;
-		
 		int iDuration = -1;
 		char sReason[64];
-		if(GetCmdArgs() == 1)
-		{
-			iDuration = GetConVarInt(g_hCvar_Default_BanTime);
-			if(GetConVarBool(g_hCvar_Use_Reason_Menu))
+		
+		if((iTarget = FindTarget(iClient, sTarget_argument, true)) != -1)
+		{		
+			if(GetCmdArgs() == 1)
 			{
-				EWM_Eban_Menu_EBanReason(iClient, iTarget, iDuration);
-				return Plugin_Handled;
+				iDuration = GetConVarInt(g_hCvar_Default_BanTime);
+				if(GetConVarBool(g_hCvar_Use_Reason_Menu))
+				{
+					EWM_Eban_Menu_EBanReason(iClient, iTarget, iDuration);
+					return Plugin_Handled;
+				}else
+				{
+					GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason));
+				}
+			}else if(GetCmdArgs() == 2)
+			{
+				GetCmdArg(2, sDuration_argument, sizeof(sDuration_argument));
+				iDuration = StringToInt(sDuration_argument);
+				if(GetConVarBool(g_hCvar_Use_Reason_Menu))
+				{
+					EWM_Eban_Menu_EBanReason(iClient, iTarget, iDuration);
+					return Plugin_Handled;
+				}else
+				{
+					GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason));
+				}
 			}else
 			{
-				GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason));
+				GetCmdArg(2, sDuration_argument, sizeof(sDuration_argument));
+				iDuration = StringToInt(sDuration_argument);
+				GetCmdArg(3, sReason_argument, sizeof(sReason_argument));
+				
+				FormatEx(sReason, sizeof(sReason), "%s", sReason_argument);
 			}
-		}else if(GetCmdArgs() == 2)
-		{
-			GetCmdArg(2, sTarget_argument, sizeof(sTarget_argument));
-			iDuration = StringToInt(sTarget_argument);
-			if(GetConVarBool(g_hCvar_Use_Reason_Menu))
+	
+			if (iDuration > GetConVarInt(g_hCvar_MaxBanTime) || iDuration < -1)
 			{
-				EWM_Eban_Menu_EBanReason(iClient, iTarget, iDuration);
+				CReplyToCommand(iClient, "%s%t %s%t: Invalid duration supplied, value must be between 1 and %d (0 = Perma, -1 = Temporary)", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Usage", GetConVarInt(g_hCvar_MaxBanTime));
 				return Plugin_Handled;
-			}else
-			{
-				GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason));
 			}
-		}else
+	
+			EWM_Eban_BanClient(iTarget, iClient, iDuration, sReason);
+		}
+		else
 		{
-			GetCmdArg(2, sTarget_argument, sizeof(sTarget_argument));
-			iDuration = StringToInt(sTarget_argument);
-			GetCmdArg(3, sTarget_argument, sizeof(sTarget_argument));
+			/* Store the results in an arraylist just to be safe */
+			ArrayList matchedTargets = new ArrayList(512);
+			for(int i = 0; i < g_OfflineArray.Length; i++)
+			{
+				class_Offline_Eban OfflineEban;
+				g_OfflineArray.GetArray(i, OfflineEban, sizeof(OfflineEban));
+				if(StrContains(OfflineEban.PlayerName, sTarget_argument, false) != -1)
+				{
+					matchedTargets.PushArray(OfflineEban);			
+				}
+			}
 			
-			FormatEx(sReason, sizeof(sReason), "%s", sTarget_argument);
-		}
+			/* Check how many targets found */
+			if(matchedTargets.Length == 0)
+			{
+				delete matchedTargets;
+				return Plugin_Handled;
+			}
+	
+			/* check admin permission */
+			GetCmdArg(2, sDuration_argument, sizeof(sDuration_argument));
+			GetCmdArg(3, sReason_argument, sizeof(sReason_argument));
+			if(!StringToIntEx(sDuration_argument, iDuration))
+				iDuration = GetConVarInt(g_hCvar_Default_BanTime);
+			
+			/* check if the admin is not root and the duration is more than the max value */
+			if(!CheckCommandAccess(iClient, "sm_eoban", ADMFLAG_ROOT, true) && iDuration > GetConVarInt(g_hCvar_OfflineLongEban))
+				iDuration = GetConVarInt(g_hCvar_OfflineLongEban);
+				
+			/* to save reason */	
+			(sReason_argument[0] == '\0') ? GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason)) : FormatEx(sReason, sizeof(sReason), sReason_argument);
 
-		if (iDuration > GetConVarInt(g_hCvar_MaxBanTime) || iDuration < -1)
-		{
-			CReplyToCommand(iClient, "%s%t %s%t: Invalid duration supplied, value must be between 1 and %d (0 = Perma, -1 = Temporary)", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Usage", GetConVarInt(g_hCvar_MaxBanTime));
-			return Plugin_Handled;
-		}
+			if(matchedTargets.Length == 1) 
+			{
+				class_Offline_Eban OfflineEban;
+				matchedTargets.GetArray(0, OfflineEban, sizeof(OfflineEban));
+				
+				/* ERASE THE OFFLINE PLAYER FROM THE OFFLINE ARRAYLIST JUST INCASE */
+				for(int i = 0; i < g_OfflineArray.Length; i++)
+				{
+					class_Offline_Eban OfflineEbanCheck;
+					g_OfflineArray.GetArray(i, OfflineEbanCheck, sizeof(OfflineEbanCheck));
+					if(StrEqual(OfflineEbanCheck.Player_SteamID, OfflineEban.Player_SteamID))
+					{
+						g_OfflineArray.Erase(i);
+						break;
+					}
+				}
 
-		EWM_Eban_BanClient(iTarget, iClient, iDuration, sReason);
+				EWM_OfflineEban_BanClient(OfflineEban, iClient, iDuration, sReason);
+			}
+			else
+			{
+				/* open a menu to let the admin choose */
+				EWM_MatchedTargets_OgfflineEban_Menu(iClient, matchedTargets, iDuration, sReason);
+			}
+			
+			/* delete the arraylist so that we wont get a memory leak :D */
+			delete matchedTargets;
+		}
 	}
 	return Plugin_Handled;
 }
@@ -666,9 +733,20 @@ public Action EWM_Eban_Command_Unrestrict(int iClient, int iArgs)
 		int iTarget = -1;
 		if((iTarget = FindTarget(iClient, sTarget_argument, true)) == -1) return Plugin_Handled;
 		
-		FormatEx(sTarget_argument, sizeof(sTarget_argument), "No Reason");
-		if(GetCmdArgs() > 1) GetCmdArg(2, sTarget_argument, sizeof(sTarget_argument));
-		EWM_Eban_UnBanClient(iTarget, iClient, sTarget_argument);
+		char sReason[64];
+		if(GetCmdArgs() == 1)
+		{
+			if(GetConVarBool(g_hCvar_Use_Reason_Menu))
+			{
+				EWM_EUnban_Menu_EUnBanReason(iClient, iTarget);
+				return Plugin_Handled;
+			}else
+			{
+				GetConVarString(g_hCvar_Default_UnBanReason, sReason, sizeof(sReason));
+			}
+		}
+
+		EWM_Eban_UnBanClient(iTarget, iClient, sReason);
 	}
 	return Plugin_Handled;
 }
@@ -724,17 +802,17 @@ public Action EWM_Eban_Command_Status(int iClient, int iArgs)
 			{
 				char sBuff[256];
 				if(g_EbanClients[iTarget].Duration==-1)
-					FormatEx(sBuff, sizeof(sBuff), "%T: %T", "Duration", iClient, "Temporary", iClient);
+					FormatEx(sBuff, sizeof(sBuff), "%s%t %s%T: %T", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Duration", iClient, "Temporary", iClient);
 				else if(g_EbanClients[iTarget].Duration==0)
-					FormatEx(sBuff, sizeof(sBuff), "%T: %T", "Duration", iClient, "Permanently", iClient);
+					FormatEx(sBuff, sizeof(sBuff), "%s%t %s%T: %T", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Duration", iClient, "Permanently", iClient);
 				else 
 				{
 					char sIssuedBuf[64];
 					FormatTime(sIssuedBuf, sizeof(sIssuedBuf), NULL_STRING, g_EbanClients[iTarget].TimeStamp_Issued);
-					FormatEx(sBuff, sizeof(sBuff), "%T: %i %T: %s", "Duration", iClient, g_EbanClients[iTarget].Duration, "Issued", iClient, sIssuedBuf);
+					FormatEx(sBuff, sizeof(sBuff), "%s%t %s%T: %i %T \n%s%t %s%T: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Duration", iClient, g_EbanClients[iTarget].Duration, "Minutes", iClient, g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Issued", iClient, sIssuedBuf);
 				}
 				CReplyToCommand(iClient, "%s%t %s%t %s%N %s%t.", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Player", g_SchemeConfig.Color_Name, iTarget, g_SchemeConfig.Color_Warning, "Has a Restrict");
-				CReplyToCommand(iClient, "%s%t %s%t: %s%s%s(%s%s%s) %s %t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Admin", g_SchemeConfig.Color_Name, g_EbanClients[iTarget].Admin_Name, g_SchemeConfig.Color_Warning, g_SchemeConfig.Color_SteamID, g_EbanClients[iTarget].Admin_SteamID, g_SchemeConfig.Color_Warning, sBuff, "Reason", g_EbanClients[iTarget].Reason);
+				CReplyToCommand(iClient, "%s%t %s%t: %s%s%s(%s%s%s) \n%s \n%s%t%s %t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Admin", g_SchemeConfig.Color_Name, g_EbanClients[iClient].Admin_Name, g_SchemeConfig.Color_Warning, g_SchemeConfig.Color_SteamID, g_EbanClients[iClient].Admin_SteamID, g_SchemeConfig.Color_Warning, sBuff, g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Reason", g_EbanClients[iClient].Reason);
 			}else CReplyToCommand(iClient, "%s%t %s%t %s%N %s%t", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Player", g_SchemeConfig.Color_Name, iTarget, g_SchemeConfig.Color_Warning, "Is not restricted");
 			return Plugin_Handled;
 		}
@@ -743,17 +821,17 @@ public Action EWM_Eban_Command_Status(int iClient, int iArgs)
 		{
 			char sBuff[256];
 			if(g_EbanClients[iClient].Duration==-1)
-				FormatEx(sBuff, sizeof(sBuff), "%T: %T", "Duration", iClient, "Temporary", iClient);
+				FormatEx(sBuff, sizeof(sBuff), "%s%t %s%T: %T", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Duration", iClient, "Temporary", iClient);
 			else if(g_EbanClients[iClient].Duration==0)
-				FormatEx(sBuff, sizeof(sBuff), "%T: %T", "Duration", iClient, "Permanently", iClient);
+				FormatEx(sBuff, sizeof(sBuff), "%s%t %s%T: %T", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Duration", iClient, "Permanently", iClient);
 			else 
 			{
 				char sIssuedBuf[64];
 				FormatTime(sIssuedBuf, sizeof(sIssuedBuf), NULL_STRING, g_EbanClients[iClient].TimeStamp_Issued);
-				FormatEx(sBuff, sizeof(sBuff), "%T: %i %T: %s", "Duration", iClient, g_EbanClients[iClient].Duration, "Issued", iClient, sIssuedBuf);
+				FormatEx(sBuff, sizeof(sBuff), "%s%t %s%T: %i %T \n%s%t %s%T: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Duration", iClient, g_EbanClients[iClient].Duration, "Minutes", iClient, g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Issued", iClient, sIssuedBuf);
 			}
 			CReplyToCommand(iClient, "%s%t %s%t%s.", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Disabled, "Status restricted", g_SchemeConfig.Color_Warning);
-			CReplyToCommand(iClient, "%s%t %s%t: %s%s%s(%s%s%s) %s %t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Admin", g_SchemeConfig.Color_Name, g_EbanClients[iClient].Admin_Name, g_SchemeConfig.Color_Warning, g_SchemeConfig.Color_SteamID, g_EbanClients[iClient].Admin_SteamID, g_SchemeConfig.Color_Warning, sBuff, "Reason", g_EbanClients[iClient].Reason);
+			CReplyToCommand(iClient, "%s%t %s%t: %s%s%s(%s%s%s) \n%s \n%s%t%s %t: %s", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Admin", g_SchemeConfig.Color_Name, g_EbanClients[iClient].Admin_Name, g_SchemeConfig.Color_Warning, g_SchemeConfig.Color_SteamID, g_EbanClients[iClient].Admin_SteamID, g_SchemeConfig.Color_Warning, sBuff, g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Reason", g_EbanClients[iClient].Reason);
 		}else CReplyToCommand(iClient, "%s%t %s%t", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Enabled, "Status unrestricted");
 	}
 	return Plugin_Handled;
@@ -806,6 +884,85 @@ void EWM_Eban_Menu_EBanReason(int iClient, int iTarget, int iDuration)
 	hMenu.Display(iClient, MENU_TIME_FOREVER);
 }
 
+void EWM_EUnban_Menu_EUnBanReason(int iClient, int iTarget)
+{
+	Menu hMenu = CreateMenu(EWM_EUnban_Menu_EUnBanReason_Handler);
+	char sMenuTranslate[128], sMenuTemp[64], sIndexTemp[96];
+	FormatEx(sMenuTranslate, sizeof(sMenuTranslate), "%T %T %N", "EW_Tag", iClient, "EUnBan Reason for", iClient, iTarget, iClient);
+	hMenu.SetTitle(sMenuTranslate);
+
+	int iUserID = GetClientUserId(iTarget);
+
+	FormatEx(sIndexTemp, sizeof(sIndexTemp), "%i/%s", iUserID, "Wrong target");
+	FormatEx(sMenuTemp, sizeof(sMenuTemp), "%T", "Wrong target", iClient);
+	hMenu.AddItem(sIndexTemp, sMenuTemp);
+
+	FormatEx(sIndexTemp, sizeof(sIndexTemp), "%i/%s", iUserID, "Giving another chance");
+	FormatEx(sMenuTemp, sizeof(sMenuTemp), "%T", "Giving another chance", iClient);
+	hMenu.AddItem(sIndexTemp, sMenuTemp);
+
+	FormatEx(sIndexTemp, sizeof(sIndexTemp), "%i/%s", iUserID, "Bad duration");
+	FormatEx(sMenuTemp, sizeof(sMenuTemp), "%T", "Bad duration", iClient);
+	hMenu.AddItem(sIndexTemp, sMenuTemp);
+
+	FormatEx(sIndexTemp, sizeof(sIndexTemp), "%i/%s", iUserID, "Was not on purpose");
+	FormatEx(sMenuTemp, sizeof(sMenuTemp), "%T", "Was not on purpose", iClient);
+	hMenu.AddItem(sIndexTemp, sMenuTemp);
+
+	FormatEx(sIndexTemp, sizeof(sIndexTemp), "%i/%s", iUserID, "Other");
+	FormatEx(sMenuTemp, sizeof(sMenuTemp), "%T", "Other", iClient);
+	hMenu.AddItem(sIndexTemp, sMenuTemp);
+
+	hMenu.Display(iClient, MENU_TIME_FOREVER);
+}
+
+void EWM_MatchedTargets_OgfflineEban_Menu(int iClient, ArrayList matchedTargets, int iDuration, const char[] sReason)
+{
+	if(matchedTargets == null)
+		return;
+		
+	Menu hMenu = new Menu(EWM_MatchedTargets_Eban_Handler);
+	hMenu.SetTitle("[EntWatch] More than one player found with the same given target, please pick one");
+	
+	int iCurrentTime = GetTime();
+	
+	for(int i = 0; i < matchedTargets.Length; i++)
+	{
+		class_Offline_Eban OfflineEban;
+		matchedTargets.GetArray(i, OfflineEban, sizeof(OfflineEban));
+		if(OfflineEban.TimeStamp != -1)
+		{
+			char sIndexItem[32], sItemName[64];
+			FormatEx(sItemName, sizeof(sItemName), "%s (#%i|%i %T)", OfflineEban.PlayerName, OfflineEban.UserID, (iCurrentTime-OfflineEban.TimeStamp_Start)/60, "Minutes Ago", iClient);
+			FormatEx(sIndexItem, sizeof(sIndexItem), "%s/%d/%s", OfflineEban.Player_SteamID, iDuration, sReason);
+			hMenu.AddItem(sIndexItem, sItemName);
+		}
+	}
+	
+	hMenu.ExitButton = true;
+	hMenu.Display(iClient, MENU_TIME_FOREVER);
+}
+public int EWM_EUnban_Menu_EUnBanReason_Handler(Menu hMenu, MenuAction hAction, int iClient, int iParam2)
+{
+	switch(hAction)
+	{
+		case MenuAction_End: delete hMenu;
+		case MenuAction_Select:
+		{
+			char sSelected[96], Explode_sParam[2][96], sReason[32];
+			hMenu.GetItem(iParam2, sSelected, sizeof(sSelected));
+			ExplodeString(sSelected, "/", Explode_sParam, 2, 96);
+			int iTarget = GetClientOfUserId(StringToInt(Explode_sParam[0]));
+			FormatEx(sReason, sizeof(sReason), "%s", Explode_sParam[1]);
+			if(IsValidClient(iTarget))
+				EWM_Eban_UnBanClient(iTarget, iClient, sReason);
+			else
+				CPrintToChat(iClient, "%s%t %s%t", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Player is not valid anymore");
+		}
+	}
+	return 0;
+}
+
 public int EWM_Eban_Menu_EBanReason_Handler(Menu hMenu, MenuAction hAction, int iClient, int iParam2)
 {
 	switch(hAction)
@@ -825,5 +982,42 @@ public int EWM_Eban_Menu_EBanReason_Handler(Menu hMenu, MenuAction hAction, int 
 				CPrintToChat(iClient, "%s%t %s%t", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Player is not valid anymore");
 		}
 	}
+	return 0;
+}
+
+public int EWM_MatchedTargets_Eban_Handler(Menu hMenu, MenuAction hAction, int iClient, int iParam2)
+{
+	switch(hAction)
+	{
+		case MenuAction_End: delete hMenu;
+		case MenuAction_Select:
+		{
+			char sSelected[96], Explode_eParam[3][32];
+			hMenu.GetItem(iParam2, sSelected, sizeof(sSelected));
+			ExplodeString(sSelected, "/", Explode_eParam, 3, 96);
+			int duration = StringToInt(Explode_eParam[1]);
+			/*
+				Explode_eParam[0] = steamid
+				Explode_eParam[1] = duration
+				Explode_eParam[2] = reason
+			*/
+			
+			/* check if the given steamid is in the arraylist */
+			for(int i = 0; i < g_OfflineArray.Length; i++)
+			{
+				class_Offline_Eban OfflineEban;
+				g_OfflineArray.GetArray(i, OfflineEban, sizeof(OfflineEban));
+				if(StrEqual(Explode_eParam[0], OfflineEban.Player_SteamID))
+				{
+					EWM_OfflineEban_BanClient(OfflineEban, iClient, duration, Explode_eParam[2]);
+					
+					/* ERASE THE OFFLINE PLAYER FROM THE OFFLINE ARRAYLIST JUST INCASE */
+					g_OfflineArray.Erase(i);
+					break;
+				}
+			}
+		}
+	}
+	
 	return 0;
 }
