@@ -4,6 +4,10 @@
 float g_fGameTime;
 int g_iOutValueOffset = -1;
 
+/* HAD TO ADD  THESE VARIABLES HERE */
+ConVar g_hCvar_OfflineLongEban;
+ArrayList g_OfflineArray;
+
 enum struct class_ItemConfig
 {
 	char		Name[32];
