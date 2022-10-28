@@ -607,50 +607,28 @@ public Action EWM_Eban_Command_Restrict(int iClient, int iArgs)
 		int iDuration = -1;
 		char sReason[64];
 		
-		if((iTarget = FindTarget(iClient, sTarget_argument, true)) != -1)
-		{		
-			if(GetCmdArgs() == 1)
-			{
-				iDuration = GetConVarInt(g_hCvar_Default_BanTime);
-				if(GetConVarBool(g_hCvar_Use_Reason_Menu))
-				{
-					EWM_Eban_Menu_EBanReason(iClient, iTarget, iDuration);
-					return Plugin_Handled;
-				}else
-				{
-					GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason));
-				}
-			}else if(GetCmdArgs() == 2)
-			{
-				GetCmdArg(2, sDuration_argument, sizeof(sDuration_argument));
-				iDuration = StringToInt(sDuration_argument);
-				if(GetConVarBool(g_hCvar_Use_Reason_Menu))
-				{
-					EWM_Eban_Menu_EBanReason(iClient, iTarget, iDuration);
-					return Plugin_Handled;
-				}else
-				{
-					GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason));
-				}
-			}else
-			{
-				GetCmdArg(2, sDuration_argument, sizeof(sDuration_argument));
-				iDuration = StringToInt(sDuration_argument);
-				GetCmdArg(3, sReason_argument, sizeof(sReason_argument));
-				
-				FormatEx(sReason, sizeof(sReason), "%s", sReason_argument);
-			}
-	
-			if (iDuration > GetConVarInt(g_hCvar_MaxBanTime) || iDuration < -1)
-			{
-				CReplyToCommand(iClient, "%s%t %s%t: Invalid duration supplied, value must be between 1 and %d (0 = Perma, -1 = Temporary)", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Usage", GetConVarInt(g_hCvar_MaxBanTime));
-				return Plugin_Handled;
-			}
-	
-			EWM_Eban_BanClient(iTarget, iClient, iDuration, sReason);
-		}
-		else
+		char sTargetName[MAX_TARGET_LENGTH];
+		int aTargetList[MAXPLAYERS];
+		int TargetCount;
+		bool TnIsMl;
+
+		if((TargetCount = ProcessTargetString(
+				sTarget_argument,
+				iClient,
+				aTargetList,
+				MAXPLAYERS,
+				COMMAND_FILTER_CONNECTED|COMMAND_FILTER_NO_IMMUNITY,
+				sTargetName,
+				sizeof(sTargetName),
+				TnIsMl)) <= 0)
 		{
+			/* IF MORE THAN ONE TARGET IN GAME FOUND */
+			ReplyToTargetError(iClient, TargetCount);
+		
+			/* IF NO TARGET FOUND */
+			if(TargetCount != COMMAND_TARGET_NONE)
+				return Plugin_Handled;
+
 			/* Store the results in an arraylist just to be safe */
 			ArrayList matchedTargets = new ArrayList(512);
 			for(int i = 0; i < g_OfflineArray.Length; i++)
@@ -710,8 +688,57 @@ public Action EWM_Eban_Command_Restrict(int iClient, int iArgs)
 			
 			/* delete the arraylist so that we wont get a memory leak :D */
 			delete matchedTargets;
+			return Plugin_Handled;
+		}
+		
+		if(TargetCount > 1)
+			return Plugin_Handled;
+			
+		if(TargetCount == 1)
+		{
+			iTarget = aTargetList[0];
+			if(GetCmdArgs() == 1)
+			{
+				iDuration = GetConVarInt(g_hCvar_Default_BanTime);
+				if(GetConVarBool(g_hCvar_Use_Reason_Menu))
+				{
+					EWM_Eban_Menu_EBanReason(iClient, iTarget, iDuration);
+					return Plugin_Handled;
+				}else
+				{
+					GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason));
+				}
+			}else if(GetCmdArgs() == 2)
+			{
+				GetCmdArg(2, sDuration_argument, sizeof(sDuration_argument));
+				iDuration = StringToInt(sDuration_argument);
+				if(GetConVarBool(g_hCvar_Use_Reason_Menu))
+				{
+					EWM_Eban_Menu_EBanReason(iClient, iTarget, iDuration);
+					return Plugin_Handled;
+				}else
+				{
+					GetConVarString(g_hCvar_Default_BanReason, sReason, sizeof(sReason));
+				}
+			}else
+			{
+				GetCmdArg(2, sDuration_argument, sizeof(sDuration_argument));
+				iDuration = StringToInt(sDuration_argument);
+				GetCmdArg(3, sReason_argument, sizeof(sReason_argument));
+				
+				FormatEx(sReason, sizeof(sReason), "%s", sReason_argument);
+			}
+	
+			if (iDuration > GetConVarInt(g_hCvar_MaxBanTime) || iDuration < -1)
+			{
+				CReplyToCommand(iClient, "%s%t %s%t: Invalid duration supplied, value must be between 1 and %d (0 = Perma, -1 = Temporary)", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Usage", GetConVarInt(g_hCvar_MaxBanTime));
+				return Plugin_Handled;
+			}
+	
+			EWM_Eban_BanClient(iTarget, iClient, iDuration, sReason);
 		}
 	}
+	
 	return Plugin_Handled;
 }
 
